@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login / Signup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+    <!-- Login Form -->
+    <div id="loginContainer" class="bg-white p-8 rounded-lg shadow-lg w-96 border-2 border-gray-300">
+        <h1 class="text-3xl font-bold text-green-600 mb-2 text-center">Welcome Back</h1>
+        <p class="text-gray-600 text-center mb-6">Login to access your dashboard</p>
+        
+        <form id="loginForm">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Email</label>
+                <input type="email" id="loginEmail" placeholder="your@email.com" 
+                    class="w-full border-2 border-gray-300 p-3 rounded focus:border-green-500 focus:outline-none" required>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
+                <input type="password" id="loginPassword" placeholder="••••••••" 
+                    class="w-full border-2 border-gray-300 p-3 rounded focus:border-green-500 focus:outline-none" required>
+            </div>
+
+            <div id="loginError" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm"></div>
+            
+            <button type="submit" 
+                class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded transition">
+                Login
+            </button>
+        </form>
+
+        <div class="mt-6 text-center">
+            <p class="text-gray-600 text-sm">Don't have an account? 
+                <button id="showSignup" class="text-green-600 font-semibold hover:underline">Sign up</button>
+            </p>
+        </div>
+    </div>
+
+    <!-- Signup Form -->
+    <div id="signupContainer" class="hidden bg-white p-8 rounded-lg shadow-lg w-96 border-2 border-gray-300">
+        <h1 class="text-3xl font-bold text-green-600 mb-2 text-center">Create Account</h1>
+        <p class="text-gray-600 text-center mb-6">Sign up to get started</p>
+        
+        <form id="signupForm">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Name</label>
+                <input type="text" id="signupName" placeholder="Your Name" 
+                    class="w-full border-2 border-gray-300 p-3 rounded focus:border-green-500 focus:outline-none" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Email</label>
+                <input type="email" id="signupEmail" placeholder="your@email.com" 
+                    class="w-full border-2 border-gray-300 p-3 rounded focus:border-green-500 focus:outline-none" required>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
+                <input type="password" id="signupPassword" placeholder="••••••••" 
+                    class="w-full border-2 border-gray-300 p-3 rounded focus:border-green-500 focus:outline-none" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Academics (comma separated)</label>
+                <input type="text" id="signupAcademics" placeholder="Math, Science, History" 
+                    class="w-full border-2 border-gray-300 p-3 rounded focus:border-green-500 focus:outline-none">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Hobbies (comma separated)</label>
+                <input type="text" id="signupHobbies" placeholder="Reading, Gaming, Coding" 
+                    class="w-full border-2 border-gray-300 p-3 rounded focus:border-green-500 focus:outline-none">
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Skills (comma separated)</label>
+                <input type="text" id="signupSkills" placeholder="Python, JavaScript, React" 
+                    class="w-full border-2 border-gray-300 p-3 rounded focus:border-green-500 focus:outline-none">
+            </div>
+
+            <div id="signupError" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm"></div>
+            
+            <button type="submit" 
+                class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded transition">
+                Sign Up
+            </button>
+        </form>
+
+        <div class="mt-6 text-center">
+            <p class="text-gray-600 text-sm">Already have an account? 
+                <button id="showLogin" class="text-green-600 font-semibold hover:underline">Login</button>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+
+        const loginContainer = document.getElementById('loginContainer');
+        const signupContainer = document.getElementById('signupContainer');
+        const showSignupBtn = document.getElementById('showSignup');
+        const showLoginBtn = document.getElementById('showLogin');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const loginError = document.getElementById('loginError');
+        const signupError = document.getElementById('signupError');
+
+        // Toggle between login and signup
+        showSignupBtn.addEventListener('click', () => {
+            loginContainer.classList.add('hidden');
+            signupContainer.classList.remove('hidden');
+        });
+
+        showLoginBtn.addEventListener('click', () => {
+            signupContainer.classList.add('hidden');
+            loginContainer.classList.remove('hidden');
+        });
+
+        // Login functionality
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Store user data in localStorage
+                    localStorage.setItem('userId', data.userId);
+                    localStorage.setItem('userName', data.userName);
+                    
+                    // Redirect to dashboard
+                    window.location.href = 'dashboard.html';
+                } else {
+                    showError(loginError, data.error || 'Login failed');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError(loginError, 'Cannot connect to server. Make sure the backend is running.');
+            }
+        });
+
+        // Signup functionality
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const academics = document.getElementById('signupAcademics').value.split(',').map(s => s.trim()).filter(s => s);
+            const hobbies = document.getElementById('signupHobbies').value.split(',').map(s => s.trim()).filter(s => s);
+            const skills = document.getElementById('signupSkills').value.split(',').map(s => s.trim()).filter(s => s);
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name,
+                        email,
+                        password,
+                        academics,
+                        hobbies,
+                        skills
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Store user data in localStorage
+                    localStorage.setItem('userId', data.userId);
+                    localStorage.setItem('userName', name);
+                    
+                    // Redirect to dashboard
+                    window.location.href = 'dashboard.html';
+                } else {
+                    showError(signupError, data.error || 'Signup failed');
+                }
+            } catch (error) {
+                console.error('Signup error:', error);
+                showError(signupError, 'Cannot connect to server. Make sure the backend is running.');
+            }
+        });
+
+        function showError(element, message) {
+            element.textContent = message;
+            element.classList.remove('hidden');
+            
+            setTimeout(() => {
+                element.classList.add('hidden');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <header class="bg-white p-6 border-b-4 border-green-500">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between mb-4">
+                <a href="index.html" class="text-lg font-bold text-gray-800">← back</a>
+                <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded font-semibold transition">Logout</button>
+            </div>
+            <h1 class="text-3xl font-bold text-green-600 mb-2">Dashboard</h1>
+            <p class="text-gray-600">View your progress, statistics, and personalized learning path.</p>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-8">
+        <div id="usersContainer" class="space-y-8">
+            <p class="text-gray-600">Loading...</p>
+        </div>
+    </main>
+
+    <!-- Modal for Edit -->
+    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-lg w-96 shadow-2xl border border-gray-300">
+            <h3 id="modalTitle" class="text-2xl font-bold mb-6 text-gray-800">Edit Profile</h3>
+            <form id="userForm">
+                <input type="text" id="nameInput" placeholder="Name" class="w-full border-2 border-gray-300 text-gray-800 p-3 mb-4 rounded focus:border-green-500 focus:outline-none" required>
+                <input type="text" id="academicsInput" placeholder="Academics (comma separated)" class="w-full border-2 border-gray-300 text-gray-800 p-3 mb-4 rounded focus:border-green-500 focus:outline-none">
+                <input type="text" id="hobbiesInput" placeholder="Hobbies (comma separated)" class="w-full border-2 border-gray-300 text-gray-800 p-3 mb-4 rounded focus:border-green-500 focus:outline-none">
+                <input type="text" id="skillsInput" placeholder="Skills (comma separated)" class="w-full border-2 border-gray-300 text-gray-800 p-3 mb-6 rounded focus:border-green-500 focus:outline-none">
+                
+                <div class="flex gap-3">
+                    <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded flex-1 font-semibold transition">Save</button>
+                    <button type="button" id="closeModal" class="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded flex-1 font-semibold transition">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+        
+        const modal = document.getElementById('modal');
+        const closeModal = document.getElementById('closeModal');
+        const userForm = document.getElementById('userForm');
+        const usersContainer = document.getElementById('usersContainer');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        let currentUser = null;
+
+        // Logout functionality
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('userId');
+            localStorage.removeItem('userName');
+            window.location.href = 'login.html';
+        });
+
+        closeModal.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
+        // Edit form submission
+        userForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const userId = localStorage.getItem('userId');
+            if (!userId) return;
+
+            const updateData = {
+                name: document.getElementById('nameInput').value,
+                academics: document.getElementById('academicsInput').value.split(',').map(s => s.trim()).filter(s => s),
+                hobbies: document.getElementById('hobbiesInput').value.split(',').map(s => s.trim()).filter(s => s),
+                skills: document.getElementById('skillsInput').value.split(',').map(s => s.trim()).filter(s => s)
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/api/user/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    modal.classList.add('hidden');
+                    localStorage.setItem('userName', updateData.name);
+                    loadUser();
+                } else {
+                    alert(data.error || 'Failed to update profile');
+                }
+            } catch (error) {
+                console.error('Update error:', error);
+                alert('Cannot connect to server');
+            }
+        });
+
+        // Load user data
+        async function loadUser() {
+            try {
+                const userId = localStorage.getItem('userId');
+
+                if (!userId) {
+                    usersContainer.innerHTML = '<p class="text-red-600 text-lg">Not logged in. <a href="login.html" class="underline">Please log in</a></p>';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/api/user/${userId}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    usersContainer.innerHTML = '<p class="text-red-600 text-lg">Failed to load user data</p>';
+                    return;
+                }
+
+                currentUser = data.user;
+                displayUser(currentUser);
+
+            } catch (error) {
+                console.error('Error loading user:', error);
+                usersContainer.innerHTML = '<p class="text-red-600 text-lg">Error connecting to server. Make sure the backend is running.</p>';
+            }
+        }
+
+        function displayUser(user) {
+            usersContainer.innerHTML = '';
+            
+            const userCard = document.createElement('div');
+            userCard.className = 'bg-white border-2 border-gray-400 p-6 rounded-lg';
+            userCard.innerHTML = `
+                <div class="mb-4 text-gray-700 text-sm italic">dont change this part & dont change the theme or colors or anything</div>
+                
+                <div class="flex gap-6 mb-6">
+                    <!-- Left: Employability Card -->
+                    <div class="border-2 border-gray-400 rounded p-8 flex flex-col items-center justify-center w-48 h-48">
+                        <p class="text-gray-700 text-sm mb-4">employability</p>
+                        <p class="text-4xl font-bold text-gray-800">-- %</p>
+                    </div>
+
+                    <!-- Right: Student Info -->
+                    <div class="flex-1 border-2 border-gray-400 rounded p-6">
+                        <p class="text-gray-700 font-semibold mb-4">student info (from the database)</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="border-2 border-gray-400 rounded p-3">
+                                <p class="text-gray-600 text-xs mb-2">name of student</p>
+                                <p class="text-gray-800">${user.name || '-'}</p>
+                            </div>
+                            <div class="border-2 border-gray-400 rounded p-3">
+                                <p class="text-gray-600 text-xs mb-2">hobbies</p>
+                                <p class="text-gray-800 text-sm">${user.hobbies?.join(', ') || '-'}</p>
+                            </div>
+                            <div class="border-2 border-gray-400 rounded p-3">
+                                <p class="text-gray-600 text-xs mb-2">skills</p>
+                                <p class="text-gray-800 text-sm">${user.skills?.join(', ') || '-'}</p>
+                            </div>
+                            <div class="border-2 border-gray-400 rounded p-3">
+                                <p class="text-gray-600 text-xs mb-2">academic strengths</p>
+                                <p class="text-gray-800 text-sm">${user.academics?.join(', ') || '-'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-2 border-gray-400 rounded p-4 text-gray-700 text-sm mb-6">
+                    student database id: ${user.id}
+                </div>
+
+                <div class="flex gap-3">
+                    <button id="editBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-semibold text-sm transition">Edit Profile</button>
+                    <button id="deleteBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-semibold text-sm transition">Delete Account</button>
+                </div>
+            `;
+            usersContainer.appendChild(userCard);
+
+            // Attach edit button handler
+            document.getElementById('editBtn').addEventListener('click', () => {
+                document.getElementById('nameInput').value = user.name || '';
+                document.getElementById('academicsInput').value = user.academics?.join(', ') || '';
+                document.getElementById('hobbiesInput').value = user.hobbies?.join(', ') || '';
+                document.getElementById('skillsInput').value = user.skills?.join(', ') || '';
+                modal.classList.remove('hidden');
+            });
+
+            // Attach delete button handler
+            document.getElementById('deleteBtn').addEventListener('click', async () => {
+                if (confirm('Are you sure you want to delete your account? This cannot be undone.')) {
+                    try {
+                        const response = await fetch(`${API_URL}/api/user/${user.id}`, {
+                            method: 'DELETE'
+                        });
+
+                        if (response.ok) {
+                            localStorage.removeItem('userId');
+                            localStorage.removeItem('userName');
+                            alert('Account deleted successfully');
+                            window.location.href = 'login.html';
+                        } else {
+                            alert('Failed to delete account');
+                        }
+                    } catch (error) {
+                        console.error('Delete error:', error);
+                        alert('Cannot connect to server');
+                    }
+                }
+            });
+        }
+
+        // Load user on page load
+        loadUser();
+    </script>
+</body>
+</html>

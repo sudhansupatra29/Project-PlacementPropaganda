@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform Landing Page</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        :root {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .circular-logo {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #2563eb;
+            color: #2563eb;
+            font-weight: 700;
+            font-size: 1rem;
+            border-radius: 9999px;
+            cursor: pointer;
+        }
+
+        .card-link {
+            text-decoration: none;
+            display: block;
+            height: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Header / Navigation Bar -->
+    <header class="bg-white shadow-lg p-4 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+
+            <!-- Logo -->
+            <a href="#" class="flex-shrink-0">
+                <div class="circular-logo hover:bg-blue-50 transition duration-300">L</div>
+            </a>
+
+            <!-- Search Bar -->
+            <div class="w-full md:w-3/5 lg:w-2/5 order-3 md:order-2">
+                <input
+                    type="search"
+                    placeholder="Search for courses, jobs, or questions..."
+                    class="w-full px-4 py-2 border-2 border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 shadow-inner"
+                />
+            </div>
+
+            <!-- Auth Section -->
+            <nav class="flex flex-shrink-0 items-center space-x-3 order-2 md:order-3">
+                <!-- Show login button when not logged in -->
+                <button
+                    id="authBtn"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition duration-150 shadow-md"
+                    onclick="window.location.href='login.html'"
+                >
+                    Login / Signup
+                </button>
+
+                <!-- Show user info when logged in (hidden by default) -->
+                <div id="userInfo" class="hidden flex items-center space-x-3">
+                    <div class="text-right">
+                        <p class="text-sm font-semibold text-gray-800" id="userName">User Name</p>
+                        <p class="text-xs text-gray-500" id="userIdDisplay">ID: ...</p>
+                    </div>
+                    <button
+                        id="logoutBtn"
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition duration-150 shadow-md"
+                    >
+                        Logout
+                    </button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area: Cards Grid -->
+    <main class="max-w-7xl mx-auto p-4 md:p-8">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-8 mt-4 text-center">
+            Explore Key Resources
+        </h1>
+
+        <!-- The 6 Card Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            <!-- Card 1: Test -->
+            <a href="test.html" class="card-link group bg-white p-6 rounded-xl shadow-2xl border-b-4 border-blue-400 hover:border-blue-600 transition duration-300 transform hover:scale-[1.02]">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2 group-hover:text-blue-600">Test</h2>
+                <p class="text-gray-500">Practice your skills with mock tests and quizzes tailored to your syllabus.</p>
+            </a>
+
+            <!-- Card 2: Dashboard -->
+            <a href="dashboard.html" class="card-link group bg-white p-6 rounded-xl shadow-2xl border-b-4 border-emerald-400 hover:border-emerald-600 transition duration-300 transform hover:scale-[1.02]">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2 group-hover:text-emerald-600">Dashboard</h2>
+                <p class="text-gray-500">View your progress, statistics, and personalized learning path.</p>
+            </a>
+
+            <!-- Card 3: Viva Questions -->
+            <a href="viva-questions.html" class="card-link group bg-white p-6 rounded-xl shadow-2xl border-b-4 border-rose-400 hover:border-rose-600 transition duration-300 transform hover:scale-[1.02]">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2 group-hover:text-rose-600">Viva Questions</h2>
+                <p class="text-gray-500">Prepare for interviews and verbal exams with common question sets.</p>
+            </a>
+
+            <!-- Card 4: Jobs -->
+            <a href="job-portal.html" class="card-link group bg-white p-6 rounded-xl shadow-2xl border-b-4 border-yellow-400 hover:border-yellow-600 transition duration-300 transform hover:scale-[1.02]">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2 group-hover:text-yellow-600">Job Portal</h2>
+                <p class="text-gray-500">Find and apply for relevant full-time job opportunities.</p>
+            </a>
+
+            <!-- Card 5: Internship -->
+            <a href="internships.html" class="card-link group bg-white p-6 rounded-xl shadow-2xl border-b-4 border-indigo-400 hover:border-indigo-600 transition duration-300 transform hover:scale-[1.02]">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2 group-hover:text-indigo-600">Internship</h2>
+                <p class="text-gray-500">Browse and secure valuable internships to gain industry experience.</p>
+            </a>
+
+            <!-- Card 6: Company Available -->
+            <a href="companies.html" class="card-link group bg-white p-6 rounded-xl shadow-2xl border-b-4 border-purple-400 hover:border-purple-600 transition duration-300 transform hover:scale-[1.02]">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2 group-hover:text-purple-600">Companies Available</h2>
+                <p class="text-gray-500">See a list of companies currently hiring or offering programs.</p>
+            </a>
+
+        </div>
+    </main>
+    <script>
+        const authBtn = document.getElementById('authBtn');
+        const userInfo = document.getElementById('userInfo');
+        const userName = document.getElementById('userName');
+        const userIdDisplay = document.getElementById('userIdDisplay');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Check if user is logged in
+        function checkAuth() {
+            const userId = localStorage.getItem('userId');
+            const storedUserName = localStorage.getItem('userName');
+
+            if (userId) {
+                // User is logged in
+                authBtn.classList.add('hidden');
+                userInfo.classList.remove('hidden');
+                userName.textContent = storedUserName || 'User';
+                userIdDisplay.textContent = `ID: ${userId.substring(0, 8)}...`;
+            } else {
+                // User is not logged in
+                authBtn.classList.remove('hidden');
+                userInfo.classList.add('hidden');
+            }
+        }
+
+        // Logout functionality
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('userId');
+            localStorage.removeItem('userName');
+            checkAuth();
+            window.location.reload();
+        });
+
+        // Check auth on page load
+        checkAuth();
+    </script>
+<script src="chatbot.js"></script>
+</body>
+</html>
