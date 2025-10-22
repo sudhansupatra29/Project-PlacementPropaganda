@@ -5,7 +5,7 @@
 
     // Create floating chatbot button
     const chatBtn = document.createElement('button');
-    chatBtn.innerText = 'Chat';
+    chatBtn.innerText = 'x💬';
     chatBtn.style.cssText = `
         position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px;
         border-radius: 50%; background: #111; color: white; border: none;
@@ -61,7 +61,7 @@
     // Simple assistant response function
     async function getBotResponse(message) {
         // Add personalized info from userData
-        let systemPrompt = `You are an internship guide. The user's info: 
+        let systemPrompt = `You are an internship guide. Keep the replies short and precise but also engaging and conveying. The user's info: 
         Name: ${userData.name || 'Unknown'}
         Academics: ${userData.academics.join(', ') || 'None'}
         Skills: ${userData.skills.join(', ') || 'None'}
@@ -76,16 +76,13 @@
         };
 
         try {
-            const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${process.env.GROQ_API_KEY}`, // replace with .env on backend if needed
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
+            const res = await fetch(`${API_BASE}/chatbot/ask`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
             });
             const data = await res.json();
-            return data.choices?.[0]?.message?.content || "Sorry, I couldn't respond.";
+            return data.reply;
         } catch (err) {
             console.error(err);
             return "Error connecting to AI API.";

@@ -188,6 +188,58 @@ app.delete('/api/user/:userId', async (req, res) => {
   }
 });
 
+// ==================== CHATBOT ROUTES ====================
+const fetch = require('node-fetch'); // Node 18+ has global fetch, otherwise keep this
+const chatbotRouter = express.Router();
+
+// 1️⃣ Get user data for chatbot
+chatbotRouter.get('/user/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const userData = userDoc.data();
+    delete userData.password; // never expose password
+
+    res.json({ success: true, userData });
+  } catch (err) {
+    console.error('Chatbot get user error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch user data' });
+  }
+});
+
+// 2️⃣ Proxy to Groq API
+chatbotRouter.post('/ask', async (req, res) => {
+  console.log('GROQ_API_KEY exists:', !!process.env.GROQ_API_KEY);
+  console.log('GROQ_API_KEY length:', process.env.GROQ_API_KEY?.length);
+  const payload = req.body; // { model, messages }
+
+  try {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+    res.json({ reply: data.choices?.[0]?.message?.content || "No reply from AI" });
+  } catch (err) {
+    console.error('Groq API error:', err);
+    res.status(500).json({ reply: "Error connecting to AI API." });
+  }
+});
+
+// Mount the chatbot routes
+app.use('/api/chatbot', chatbotRouter);
+
+
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
