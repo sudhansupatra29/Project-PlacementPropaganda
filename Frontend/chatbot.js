@@ -5,7 +5,7 @@
 
     // Create floating chatbot button
     const chatBtn = document.createElement('button');
-    chatBtn.innerText = 'x💬';
+    chatBtn.innerText = '💬';
     chatBtn.style.cssText = `
         position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px;
         border-radius: 50%; background: #111; color: white; border: none;
@@ -61,7 +61,7 @@
     // Simple assistant response function
     async function getBotResponse(message) {
         // Add personalized info from userData
-        let systemPrompt = `You are an internship guide. Keep the replies short and precise but also engaging and conveying. The user's info: 
+        let systemPrompt = `You are an internship guide. Keep the replies short, precise and formal. The user's info:
         Name: ${userData.name || 'Unknown'}
         Academics: ${userData.academics.join(', ') || 'None'}
         Skills: ${userData.skills.join(', ') || 'None'}
