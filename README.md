@@ -13,6 +13,6 @@ ANYWAYS, to anyone who wishes to test this out, the following are the steps on w
 5. It is also recommended to have a Firebase too. This one is optional (unless you get an error).
 6. Make a ".env" file and paste in the GROQ_API_KEY, FIREBASE_PRIVATE_KEY, FIREBASE_PROJECT_ID and FIREBASE_CLIENT_EMAIL in there (you'll fill them with your own resources).
 7. Lastly, in the command prompt window, type in "node server.js".
-============================================================================================================================================
+
 
 You're good to go ahead and test.
