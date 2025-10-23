@@ -214,8 +214,6 @@ chatbotRouter.get('/user/:userId', async (req, res) => {
 
 // 2️⃣ Proxy to Groq API
 chatbotRouter.post('/ask', async (req, res) => {
-  console.log('GROQ_API_KEY exists:', !!process.env.GROQ_API_KEY);
-  console.log('GROQ_API_KEY length:', process.env.GROQ_API_KEY?.length);
   const payload = req.body; // { model, messages }
 
   try {
