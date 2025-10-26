@@ -1,4 +1,4 @@
-// ========== CHATBOT MODULE ==========
+// ChatBot Module for floating chatbot.
 (async function() {
     const API_BASE = 'http://localhost:5000/api'; // your backend
     const USER_ID = localStorage.getItem('userId'); // fetch logged-in user
@@ -13,17 +13,16 @@
     `;
     document.body.appendChild(chatBtn);
 
-    // Create chat panel
+    // Create chat panel (minimal inline style; size/placement set by updatePanel())
     const chatPanel = document.createElement('div');
     chatPanel.style.cssText = `
-        position: fixed; bottom: 90px; right: 20px; width: 320px; max-height: 400px;
-        background: white; border: 1px solid #ccc; border-radius: 12px;
+        position: fixed; background: white; border: 1px solid #ccc; border-radius: 12px;
         box-shadow: 0 5px 15px rgba(0,0,0,0.2); display: none; flex-direction: column;
         z-index: 9999; overflow: hidden;
         animation: slideUp 0.3s ease-out;
     `;
     chatPanel.innerHTML = `
-        <div id="chatHeader" style="background:#111; color:white; padding:10px; font-weight:bold; cursor:move;">
+        <div id="chatHeader" style="background:#111; color:white; padding:10px; font-weight:bold;">
             Assistant
             <span id="closeChat" style="float:right; cursor:pointer;">✕</span>
         </div>
@@ -35,16 +34,16 @@
     `;
     document.body.appendChild(chatPanel);
 
+    const chatMessages = chatPanel.querySelector('#chatMessages');
+    const chatInput = chatPanel.querySelector('#chatInput');
+    const chatSend = chatPanel.querySelector('#chatSend');
+
     // Show/hide
     chatBtn.addEventListener('click', () => {
         chatPanel.style.display = chatPanel.style.display === 'flex' ? 'none' : 'flex';
         chatPanel.style.flexDirection = 'column';
     });
     chatPanel.querySelector('#closeChat').addEventListener('click', () => chatPanel.style.display = 'none');
-
-    const chatMessages = chatPanel.querySelector('#chatMessages');
-    const chatInput = chatPanel.querySelector('#chatInput');
-    const chatSend = chatPanel.querySelector('#chatSend');
 
     // Fetch user data from backend
     let userData = {};
@@ -58,17 +57,94 @@
         }
     }
 
+    // Centred cahtbot
+    function isMobileViewport() {
+        return true;
+    }
+
+    // Update panel size & anchoring to maintain a 4:3 ratio
+    function updatePanel() {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const mobile = isMobileViewport();
+
+        if (!mobile) {
+            // Desktop: panel area ~ 1/8 of viewport, keep 4:3 (width:height = 4:3)
+            const area = (w * h) / 8;
+            let width = Math.round(Math.sqrt((4 / 3) * area));
+            let height = Math.round((3 / 4) * width);
+
+            // Clamp to viewport with small margins
+            const maxWidth = w - 40;
+            const maxHeight = h - 40;
+            if (width > maxWidth) {
+                width = maxWidth;
+                height = Math.round((3 / 4) * width);
+            }
+            if (height > maxHeight) {
+                height = maxHeight;
+                width = Math.round((4 / 3) * height);
+            }
+
+            chatPanel.style.width = width + 'px';
+            chatPanel.style.height = height + 'px';
+
+            // Anchor bottom-right
+            chatPanel.style.left = 'auto';
+            chatPanel.style.top = 'auto';
+            chatPanel.style.right = '20px';
+            chatPanel.style.bottom = '90px';
+            chatPanel.style.transform = 'none';
+
+            // Disable dragging to keep anchor behavior consistent
+            disableDragging();
+        } else {
+            // Mobile: center the panel and make it large but fit within viewport (90% max)
+            const marginFactor = 0.9;
+            const maxWidth = w * marginFactor;
+            const maxHeight = h * marginFactor;
+
+            // Choose width that respects 4:3 ratio and fits both constraints
+            let width = Math.min(maxWidth, Math.round((4 / 3) * maxHeight));
+            let height = Math.round((3 / 4) * width);
+
+            // Final clamp in case
+            if (height > maxHeight) {
+                height = maxHeight;
+                width = Math.round((4 / 3) * height);
+            }
+
+            chatPanel.style.width = Math.round(width) + 'px';
+            chatPanel.style.height = Math.round(height) + 'px';
+
+            // Center on screen
+            chatPanel.style.left = '50%';
+            chatPanel.style.top = '50%';
+            chatPanel.style.right = 'auto';
+            chatPanel.style.bottom = 'auto';
+            chatPanel.style.transform = 'translate(-50%,-50%)';
+
+            // Disable dragging on mobile centered layout
+            disableDragging();
+        }
+    }
+
     // Simple assistant response function
     async function getBotResponse(message) {
-        // Add personalized info from userData
-        let systemPrompt = `You are an internship guide. Keep the replies short, precise and formal. The user's info:
+        // Defensive userData handling
+        const academics = Array.isArray(userData.academics) ? userData.academics.join(', ') : (userData.academics || 'None');
+        const skills = Array.isArray(userData.skills) ? userData.skills.join(', ') : (userData.skills || 'None');
+        const hobbies = Array.isArray(userData.hobbies) ? userData.hobbies.join(', ') : (userData.hobbies || 'None');
+
+        let systemPrompt = `You are an internship guide. Keep the replies short, precise and formal.
+        The user's info:
         Name: ${userData.name || 'Unknown'}
-        Academics: ${userData.academics.join(', ') || 'None'}
-        Skills: ${userData.skills.join(', ') || 'None'}
-        Hobbies: ${userData.hobbies.join(', ') || 'None'}`;
+        Academics: ${academics}
+        Skills: ${skills}
+        Hobbies: ${hobbies}`;
 
         const payload = {
-            model: 'llama-3.1-8b-instant',
+            model: 'openai/gpt-oss-20b',
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: message }
@@ -77,9 +153,9 @@
 
         try {
             const res = await fetch(`${API_BASE}/chatbot/ask`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
             const data = await res.json();
             return data.reply;
@@ -89,11 +165,17 @@
         }
     }
 
-    // Send message
+    // Send message (safer DOM insertion)
     async function sendMessage() {
         const msg = chatInput.value.trim();
         if (!msg) return;
-        chatMessages.innerHTML += `<div style="text-align:right; margin-bottom:5px;"><b>You:</b> ${msg}</div>`;
+
+        const userDiv = document.createElement('div');
+        userDiv.style.textAlign = 'right';
+        userDiv.style.marginBottom = '5px';
+        userDiv.innerHTML = `<b>You:</b> ${escapeHtml(msg)}`;
+        chatMessages.appendChild(userDiv);
+
         chatInput.value = '';
         chatMessages.scrollTop = chatMessages.scrollHeight;
 
@@ -103,7 +185,7 @@
         chatMessages.scrollTop = chatMessages.scrollHeight;
 
         const reply = await getBotResponse(msg);
-        botReplyDiv.innerHTML = `<b>Assistant:</b> ${reply}`;
+        botReplyDiv.innerHTML = `<b>Assistant:</b> ${escapeHtml(reply)}`;
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
@@ -112,20 +194,50 @@
         if (e.key === 'Enter') sendMessage();
     });
 
-    // Optional: draggable panel
-    let isDragging = false, offsetX, offsetY;
+    // Basic HTML-escape to avoid injecting raw user/API HTML
+    function escapeHtml(str) {
+        if (typeof str !== 'string') return ''; // This alone is a if statement, below is just a block.
+        return str.replace(/[&<>"']/g, function(m) {
+            return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m];
+        });
+    }
+
+    // Dragging helpers (disabled by default; kept for potential desktop-enable)
+    let dragState = { enabled: false, isDragging: false, offsetX: 0, offsetY: 0 };
+    function enableDragging() { dragState.enabled = true; chatPanel.querySelector('#chatHeader').style.cursor = 'move'; }
+    function disableDragging() { dragState.enabled = false; chatPanel.querySelector('#chatHeader').style.cursor = 'default'; }
+
+    // Optional: enable dragging only if developer explicitly wants it (kept off to honor anchors)
+    // header drag events still present but respect dragState.enabled
     const header = chatPanel.querySelector('#chatHeader');
     header.addEventListener('mousedown', e => {
-        isDragging = true;
-        offsetX = e.clientX - chatPanel.offsetLeft;
-        offsetY = e.clientY - chatPanel.offsetTop;
+        if (!dragState.enabled) return;
+        dragState.isDragging = true;
+        // Use clientX/Y relative to panel position
+        dragState.offsetX = e.clientX - chatPanel.getBoundingClientRect().left;
+        dragState.offsetY = e.clientY - chatPanel.getBoundingClientRect().top;
+        // remove transform when dragging
+        chatPanel.style.transform = 'none';
     });
-    document.addEventListener('mouseup', () => isDragging = false);
+    document.addEventListener('mouseup', () => dragState.isDragging = false);
     document.addEventListener('mousemove', e => {
-        if (isDragging) {
-            chatPanel.style.left = e.clientX - offsetX + 'px';
-            chatPanel.style.top = e.clientY - offsetY + 'px';
-        }
+        if (!dragState.isDragging) return;
+        let left = e.clientX - dragState.offsetX;
+        let top = e.clientY - dragState.offsetY;
+        // constrain inside viewport
+        left = Math.max(8, Math.min(left, window.innerWidth - chatPanel.offsetWidth - 8));
+        top = Math.max(8, Math.min(top, window.innerHeight - chatPanel.offsetHeight - 8));
+        chatPanel.style.left = left + 'px';
+        chatPanel.style.top = top + 'px';
+        chatPanel.style.right = 'auto';
+        chatPanel.style.bottom = 'auto';
     });
+
+    // React to resize/orientation changes
+    window.addEventListener('resize', updatePanel);
+    window.addEventListener('orientationchange', updatePanel);
+
+    // Initial layout
+    updatePanel();
 
 })();

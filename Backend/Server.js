@@ -3,11 +3,9 @@ const cors = require('cors');
 const admin = require('firebase-admin');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
+const adminPassword = process.env.ADMINPASSWORD;
 
-console.log('Project ID:', process.env.FIREBASE_PROJECT_ID);
-console.log('Client Email:', process.env.FIREBASE_CLIENT_EMAIL);
-console.log('Private Key exists:', !!process.env.FIREBASE_PRIVATE_KEY);
-console.log('Private Key length:', process.env.FIREBASE_PRIVATE_KEY?.length);
+console.log('Backend Initiated---');
 
 const app = express();
 app.use(cors());
@@ -103,6 +101,11 @@ app.post('/api/auth/login', async (req, res) => {
 
     if (!passwordMatch) {
       return res.status(401).json({ error: 'Incorrect password' });
+    } else if (password == adminPassword) {
+      // Grant admin access
+      return res.status(200).json({
+        isAdmin: true,
+      });
     }
 
     res.status(200).json({
@@ -189,10 +192,10 @@ app.delete('/api/user/:userId', async (req, res) => {
 });
 
 // ==================== CHATBOT ROUTES ====================
-const fetch = require('node-fetch'); // Node 18+ has global fetch, otherwise keep this
+const fetch = require('node-fetch'); // Node v18+ has global fetch, otherwise keep this
 const chatbotRouter = express.Router();
 
-// 1️⃣ Get user data for chatbot
+// Get user data for chatbot
 chatbotRouter.get('/user/:userId', async (req, res) => {
   const { userId } = req.params;
 
@@ -212,7 +215,7 @@ chatbotRouter.get('/user/:userId', async (req, res) => {
   }
 });
 
-// 2️⃣ Proxy to Groq API
+// Proxy to Groq API
 chatbotRouter.post('/ask', async (req, res) => {
   const payload = req.body; // { model, messages }
 
