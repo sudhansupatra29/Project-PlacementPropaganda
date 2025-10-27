@@ -3,6 +3,38 @@
     const API_BASE = 'http://localhost:5000/api'; // your backend
     const USER_ID = localStorage.getItem('userId'); // fetch logged-in user
 
+    const style = document.createElement('style');
+    style.textContent = `
+    #chatMessages {
+    display: flex;
+    flex-direction: column;
+    }
+
+    .chat-bubble {
+    max-width: 80%;
+    margin: 6px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    line-height: 1.4;
+    word-wrap: break-word;
+    }
+
+    .chat-bubble.user {
+    background: #111;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 0;
+    }
+
+    .chat-bubble.bot {
+    background: #f2f2f2;
+    color: #111;
+    align-self: flex-start;
+    border-bottom-left-radius: 0;
+    }
+    `;
+    document.head.appendChild(style);
+
     // Create floating chatbot button
     const chatBtn = document.createElement('button');
     chatBtn.innerText = '💬';
@@ -57,76 +89,30 @@
         }
     }
 
-    // Centred cahtbot
-    function isMobileViewport() {
-        return true;
-    }
-
     // Update panel size & anchoring to maintain a 4:3 ratio
     function updatePanel() {
         const w = window.innerWidth;
         const h = window.innerHeight;
-        const mobile = isMobileViewport();
+        const marginFactor = 0.9;
+        const maxWidth = w * marginFactor;
+        const maxHeight = h * marginFactor;
 
-        if (!mobile) {
-            // Desktop: panel area ~ 1/8 of viewport, keep 4:3 (width:height = 4:3)
-            const area = (w * h) / 8;
-            let width = Math.round(Math.sqrt((4 / 3) * area));
-            let height = Math.round((3 / 4) * width);
+        let width = Math.min(maxWidth, Math.round((4 / 3) * maxHeight));
+        let height = Math.round((3 / 4) * width);
 
-            // Clamp to viewport with small margins
-            const maxWidth = w - 40;
-            const maxHeight = h - 40;
-            if (width > maxWidth) {
-                width = maxWidth;
-                height = Math.round((3 / 4) * width);
-            }
-            if (height > maxHeight) {
-                height = maxHeight;
-                width = Math.round((4 / 3) * height);
-            }
-
-            chatPanel.style.width = width + 'px';
-            chatPanel.style.height = height + 'px';
-
-            // Anchor bottom-right
-            chatPanel.style.left = 'auto';
-            chatPanel.style.top = 'auto';
-            chatPanel.style.right = '20px';
-            chatPanel.style.bottom = '90px';
-            chatPanel.style.transform = 'none';
-
-            // Disable dragging to keep anchor behavior consistent
-            disableDragging();
-        } else {
-            // Mobile: center the panel and make it large but fit within viewport (90% max)
-            const marginFactor = 0.9;
-            const maxWidth = w * marginFactor;
-            const maxHeight = h * marginFactor;
-
-            // Choose width that respects 4:3 ratio and fits both constraints
-            let width = Math.min(maxWidth, Math.round((4 / 3) * maxHeight));
-            let height = Math.round((3 / 4) * width);
-
-            // Final clamp in case
-            if (height > maxHeight) {
-                height = maxHeight;
-                width = Math.round((4 / 3) * height);
-            }
-
-            chatPanel.style.width = Math.round(width) + 'px';
-            chatPanel.style.height = Math.round(height) + 'px';
-
-            // Center on screen
-            chatPanel.style.left = '50%';
-            chatPanel.style.top = '50%';
-            chatPanel.style.right = 'auto';
-            chatPanel.style.bottom = 'auto';
-            chatPanel.style.transform = 'translate(-50%,-50%)';
-
-            // Disable dragging on mobile centered layout
-            disableDragging();
+        if (height > maxHeight) {
+            height = maxHeight;
+            width = Math.round((4 / 3) * height);
         }
+
+        chatPanel.style.width = Math.round(width) + 'px';
+        chatPanel.style.height = Math.round(height) + 'px';
+        chatPanel.style.left = '50%';
+        chatPanel.style.top = '50%';
+        chatPanel.style.right = 'auto';
+        chatPanel.style.bottom = 'auto';
+        chatPanel.style.transform = 'translate(-50%,-50%)';
+        disableDragging();
     }
 
     // Simple assistant response function
@@ -141,7 +127,8 @@
         Name: ${userData.name || 'Unknown'}
         Academics: ${academics}
         Skills: ${skills}
-        Hobbies: ${hobbies}`;
+        Hobbies: ${hobbies}
+        Also if you are to write inline math use dollar signs ($ .... $).`;
 
         const payload = {
             model: 'openai/gpt-oss-20b',
@@ -171,24 +158,23 @@
         if (!msg) return;
 
         const userDiv = document.createElement('div');
-        userDiv.style.textAlign = 'right';
-        userDiv.style.marginBottom = '5px';
-        userDiv.innerHTML = `<b>You:</b> ${escapeHtml(msg)}`;
+        userDiv.className = 'chat-bubble user';
+        userDiv.innerHTML = escapeHtml(msg);
         chatMessages.appendChild(userDiv);
 
         chatInput.value = '';
         chatMessages.scrollTop = chatMessages.scrollHeight;
 
         const botReplyDiv = document.createElement('div');
-        botReplyDiv.innerHTML = `<b>Assistant:</b> ⟳ Thinking...`;
+        botReplyDiv.className = 'chat-bubble bot';
+        botReplyDiv.innerHTML = '⟳ Thinking...';
         chatMessages.appendChild(botReplyDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
 
         const reply = await getBotResponse(msg);
-        // Convert markdown → HTML → sanitize
-        const formatted = DOMPurify.sanitize(marked.parse(reply));
-        botReplyDiv.innerHTML = `<b>Assistant:</b> ${formatted}`;
+        botReplyDiv.innerHTML = DOMPurify.sanitize(marked.parse(reply));
         chatMessages.scrollTop = chatMessages.scrollHeight;
+        if (window.MathJax) MathJax.typesetPromise();
+
     }
 
     chatSend.addEventListener('click', sendMessage);
@@ -206,7 +192,9 @@
 
     // Dragging helpers (disabled by default; kept for potential desktop-enable)
     let dragState = { enabled: false, isDragging: false, offsetX: 0, offsetY: 0 };
+    // if you wish to make chatbot draggable.
     function enableDragging() { dragState.enabled = true; chatPanel.querySelector('#chatHeader').style.cursor = 'move'; }
+    // default - good enough
     function disableDragging() { dragState.enabled = false; chatPanel.querySelector('#chatHeader').style.cursor = 'default'; }
 
     // Optional: enable dragging only if developer explicitly wants it (kept off to honor anchors)
