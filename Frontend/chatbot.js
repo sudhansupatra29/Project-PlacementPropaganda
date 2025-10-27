@@ -185,7 +185,9 @@
         chatMessages.scrollTop = chatMessages.scrollHeight;
 
         const reply = await getBotResponse(msg);
-        botReplyDiv.innerHTML = `<b>Assistant:</b> ${escapeHtml(reply)}`;
+        // Convert markdown → HTML → sanitize
+        const formatted = DOMPurify.sanitize(marked.parse(reply));
+        botReplyDiv.innerHTML = `<b>Assistant:</b> ${formatted}`;
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
